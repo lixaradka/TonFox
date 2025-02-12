@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TonEarn Bot</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Шапка -->
+    <header>
+      <div class="profile">
+        <img src="https://via.placeholder.com/40" alt="Profile" class="profile-icon">
+        <div class="profile-info">
+          <span class="username">User</span>
+          <span class="balance">0.00 TON</span>
+        </div>
+      </div>
+      <button id="connect-wallet">🔗 Connect Wallet</button>
+    </header>
+
+    <!-- Прогресс бар -->
+    <div class="progress-section">
+      <h2>Уровень 3</h2>
+      <div class="progress-bar">
+        <div class="progress" style="width: 75%;"></div>
+      </div>
+      <p class="progress-text">75% до уровня 4 (+0.1 TON)</p>
+    </div>
+
+    <!-- Задания -->
+    <div class="tasks">
+      <h2>🎯 Недавние задания</h2>
+      <div class="task-card">
+        <div class="task-content">
+          <h3>Подпишись на канал</h3>
+          <p>Получи 0.01 TON за подписку на @ton_news.</p>
+        </div>
+        <button class="task-button">➔</button>
+      </div>
+      <div class="task-card">
+        <div class="task-content">
+          <h3>Сделай репост</h3>
+          <p>Получи 0.02 TON за репост новости.</p>
+        </div>
+        <button class="task-button">➔</button>
+      </div>
+      <button class="show-all-button">Показать все задания</button>
+    </div>
+
+    <!-- Нижняя навигация -->
+    <nav>
+      <button class="nav-button active">
+        <span class="icon">🏠</span>
+        <span class="text">Главная</span>
+      </button>
+      <button class="nav-button">
+        <span class="icon">📋</span>
+        <span class="text">Задания</span>
+      </button>
+      <button class="nav-button">
+        <span class="icon">👥</span>
+        <span class="text">Рефералы</span>
+      </button>
+    </nav>
+  </div>
+
+  <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
