@@ -1,0 +1,13 @@
+{
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self' https://unpkg.com https://vercel.live; script-src 'self' 'unsafe-eval' https://unpkg.com https://vercel.live; style-src 'self' 'unsafe-inline';"
+        }
+      ]
+    }
+  ]
+}
