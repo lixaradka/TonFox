@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
@@ -5,7 +6,6 @@
   <title>TonEarn Bot</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="icon" href="/non-agressive-fire-fox-head-right-side-view-.png">
-  <script src="https://cdn.jsdelivr.net/npm/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
 </head>
 <body>
   <div class="container">
@@ -23,52 +23,83 @@
 
     <!-- Прогресс бар -->
     <div class="progress-section">
-      <h2>Уровень 3</h2>
+      <h2>Уровень 0</h2>
       <div class="progress-bar">
         <div class="progress" style="width: 75%;"></div>
       </div>
-      <p class="progress-text">75% до уровня 4 (+0.1 TON)</p>
+      <p class="progress-text">75% до уровня 1 (+0.1 TON)</p>
     </div>
 
     <!-- Задания -->
     <div class="tasks">
-      <h2>🎯 Недавние задания</h2>
-      <div class="task-card">
-        <div class="task-content">
-          <h3>Подпишись на канал</h3>
-          <p>Получи 0.01 TON за подписку на @ton_news.</p>
-        </div>
-        <button class="task-button">➔</button>
-      </div>
-      <div class="task-card">
-        <div class="task-content">
-          <h3>Сделай репост</h3>
-          <p>Получи 0.02 TON за репост новости.</p>
-        </div>
-        <button class="task-button">➔</button>
-      </div>
-      <button class="show-all-button">Показать все задания</button>
+      <h2>🎯 Новые задания</h2>
+      <div id="task-list"></div>
     </div>
 
     <!-- Нижняя навигация -->
     <nav>
       <button class="nav-button active">
-        <span class="icon">🏠</span>
+        <span class="icon"><img src="/imgs/home.png" alt=""></span>
         <span class="text">Главная</span>
       </button>
       <button class="nav-button">
-        <span class="icon">📋</span>
+        <span class="icon"><img src="/imgs/quest.png" alt=""></span>
         <span class="text">Задания</span>
       </button>
       <button class="nav-button">
-        <span class="icon">👥</span>
+        <span class="icon"><img src="/imgs/referral-icon.png" alt=""></span>
         <span class="text">Рефералы</span>
+      </button>
+      <button class="nav-button">
+        <span class="icon"><img src="/imgs/info.png" alt=""></span>
+        <span class="text">Помощь</span>
       </button>
     </nav>
   </div>
 
-  <script src="script.js"></script>
-  
+  <script>
+    document.addEventListener("DOMContentLoaded", async function () {
+      let telegramId = 123456789;  // Пример: Заменить на реальный ID из Telegram
+      let response = await fetch(`https://lixaradka.github.io/TonFox/user/${telegramId}`);
+
+      let data = await response.json();
+
+      if (!data.error) {
+        document.querySelector(".username").textContent = data.username;
+        document.querySelector(".balance").textContent = `${data.balance} TON`;
+      }
+
+      // Получаем список заданий
+      let tasksResponse = await fetch('/tasks');
+      let tasks = await tasksResponse.json();
+
+      const taskList = document.getElementById("task-list");
+      tasks.forEach(task => {
+        const taskCard = document.createElement("div");
+        taskCard.classList.add("task-card");
+        taskCard.innerHTML = `
+          <div class="task-content">
+            <h3>${task.title}</h3>
+            <p>${task.description}</p>
+            <p>Награда: ${task.reward} TON</p>
+          </div>
+          <button class="task-button" onclick="completeTask(${telegramId}, ${task.id})">Выполнить</button>
+        `;
+        taskList.appendChild(taskCard);
+      });
+    });
+
+    async function completeTask(telegramId, taskId) {
+      const response = await fetch('/complete_task', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ telegram_id: telegramId, task_id: taskId })
+      });
+      const data = await response.json();
+      alert(`Баланс обновлен! Новый баланс: ${data.new_balance} TON`);
+    }
+  </script>
 </body>
 </html>
-

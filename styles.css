@@ -115,7 +115,7 @@ body {
     text-align: center;
     margin-bottom: 2rem;
   }
-  
+   
   .progress-bar {
     background: #333;
     border-radius: 12px;
@@ -238,13 +238,21 @@ body {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
   }
   
+
   .nav-button:hover {
     background: #ffcc00;
     color: white;
   }
   
   .nav-button .icon {
+    width: 35px;
+    height: 35px;
     font-size: 1.5rem;
+  }
+
+  .nav-button .icon img {
+    width: 100%;
+
   }
   
   .nav-button .text {
