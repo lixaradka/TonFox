@@ -1,9 +1,0 @@
-
-{
-  "name": "tonconnect-project",
-  "version": "1.0.0",
-  "type": "module",
-  "dependencies": {
-    "@tonconnect/ui": "^2.0.11"
-  }
-}
