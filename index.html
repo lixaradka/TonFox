@@ -1,105 +1,97 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TonEarn Bot</title>
-  <link rel="stylesheet" href="styles.css">
-  <link rel="icon" href="/non-agressive-fire-fox-head-right-side-view-.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberPet</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/styles.css">
+    </style>
 </head>
 <body>
-  <div class="container">
-    <!-- Шапка -->
-    <header>
-      <div class="profile">
-        <img src="imgs/non-agressive-fire-fox-head-right-side-view-.png" alt="Profile" class="profile-icon">
-        <div class="profile-info">
-          <span class="username">User</span>
-          <span class="balance">0.00 TON</span>
+    <div class="container">
+        <!-- Шапка профиля -->
+        <header class="profile-header">
+            <div class="user-info">
+                <div class="avatar">U</div>
+                <div>
+                    <div class="username">CyberUser</div>
+                    <div class="level-badge">
+                        <i class="fas fa-shield-alt"></i>
+                        Уровень 12
+                    </div>
+                </div>
+            </div>
+            <div class="balance">🪙 0</div>
+        </header>
+
+        <!-- Основной блок с питомцем -->
+        <div class="pet-container">
+            <div class="pet-image"></div>
+            
+            <div class="stats-bars">
+                <div class="progress-container hunger">
+                    <div class="progress-label">
+                        <span>Голод</span>
+                        <span>100%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 35%"></div>
+                    </div>
+                </div>
+
+                <div class="progress-container mining">
+                    <div class="progress-label">
+                        <span>Прогресс</span>
+                        <span>0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 75%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions-grid">
+                <button class="action-btn">
+                    <i class="fas fa-utensils"></i>
+                    Кормить
+                </button>
+                <button class="action-btn">
+                    <i class="fas fa-coins"></i>
+                    Майнить
+                </button>
+            </div>
         </div>
-      </div>
-      <button id="connectWallet">🔗 Connect Wallet</button>
-    </header>
 
-    <!-- Прогресс бар -->
-    <div class="progress-section">
-      <h2>Уровень 0</h2>
-      <div class="progress-bar">
-        <div class="progress" style="width: 75%;"></div>
-      </div>
-      <p class="progress-text">75% до уровня 1 (+0.1 TON)</p>
+          <!-- Добавляем контейнер для уведомлений -->
+    <div id="notifications"></div>
+
+    <!-- Добавляем аудио элементы -->
+    <audio id="coinSound" src="data:audio/wav;base64,UklGRl9vAAAKAAAAIAAAACAAAABkYXRhAAAAAA=="></audio>
+    <audio id="levelUpSound" src="data:audio/wav;base64,UklGRl9vAAAKAAAAIAAAACAAAABkYXRhAAAAAA=="></audio>
+    <audio id="warningSound" src="data:audio/wav;base64,UklGRl9vAAAKAAAAIAAAACAAAABkYXRhAAAAAA=="></audio>
+
+        <!-- Нижняя навигация -->
+        <nav class="bottom-nav">
+            <a href="#" class="nav-item active">
+                <i class="fas fa-home"></i>
+                Главная
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-store"></i>
+                Магазин
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-chart-line"></i>
+                Статы
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-cog"></i>
+                Настройки
+            </a>
+        </nav>
     </div>
 
-    <!-- Задания -->
-    <div class="tasks">
-      <h2>🎯 Новые задания</h2>
-      <div id="task-list"></div>
-    </div>
-
-    <!-- Нижняя навигация -->
-    <nav>
-      <button class="nav-button active">
-        <span class="icon"><img src="imgs/home.png" alt=""></span>
-        <span class="text">Главная</span>
-      </button>
-      <button class="nav-button">
-        <span class="icon"><img src="imgs/quest.png" alt=""></span>
-        <span class="text">Задания</span>
-      </button>
-      <button class="nav-button">
-        <span class="icon"><img src="imgs/referral-icon.png" alt=""></span>
-        <span class="text">Рефералы</span>
-      </button>
-      <button class="nav-button">
-        <span class="icon"><img src="imgs/info.png" alt=""></span>
-        <span class="text">Помощь</span>
-      </button>
-    </nav>
-  </div>
-
-  <script>
-    document.addEventListener("DOMContentLoaded", async function () {
-      let telegramId = 992930870;  // Пример: Заменить на реальный ID из Telegram
-      let response = await fetch(`https://lixaradka.github.io/TonFox/user/${telegramId}`);
-
-      let data = await response.json();
-
-      if (!data.error) {
-        document.querySelector(".username").textContent = data.username;
-        document.querySelector(".balance").textContent = `${data.balance} TON`;
-      }
-
-      // Получаем список заданий
-      let tasksResponse = await fetch('/tasks');
-      let tasks = await tasksResponse.json();
-
-      const taskList = document.getElementById("task-list");
-      tasks.forEach(task => {
-        const taskCard = document.createElement("div");
-        taskCard.classList.add("task-card");
-        taskCard.innerHTML = `
-          <div class="task-content">
-            <h3>${task.title}</h3>
-            <p>${task.description}</p>
-            <p>Награда: ${task.reward} TON</p>
-          </div>
-          <button class="task-button" onclick="completeTask(${telegramId}, ${task.id})">Выполнить</button>
-        `;
-        taskList.appendChild(taskCard);
-      });
-    });
-
-    async function completeTask(telegramId, taskId) {
-      const response = await fetch('/complete_task', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ telegram_id: telegramId, task_id: taskId })
-      });
-      const data = await response.json();
-      alert(`Баланс обновлен! Новый баланс: ${data.new_balance} TON`);
-    }
-  </script>
+    <script src="/script.js"></script>
 </body>
 </html>
