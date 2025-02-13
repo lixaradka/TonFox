@@ -3,95 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CyberPet</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="/styles.css">
-
+    <title>Галерея артефактов</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        .gallery img {
+            width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Шапка профиля -->
-        <header class="profile-header">
-            <div class="user-info">
-                <div class="avatar">U</div>
-                <div>
-                    <div class="username">CyberUser</div>
-                    <div class="level-badge">
-                        <i class="fas fa-shield-alt"></i>
-                        Уровень 12
-                    </div>
-                </div>
-            </div>
-            <div class="balance">🪙 0</div>
-        </header>
-
-        <!-- Основной блок с питомцем -->
-        <div class="pet-container">
-            <div class="pet-image"></div>
-            
-            <div class="stats-bars">
-                <div class="progress-container hunger">
-                    <div class="progress-label">
-                        <span>Голод</span>
-                        <span>100%</span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: 35%"></div>
-                    </div>
-                </div>
-
-                <div class="progress-container mining">
-                    <div class="progress-label">
-                        <span>Прогресс</span>
-                        <span>0%</span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: 75%"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="actions-grid">
-                <button class="action-btn">
-                    <i class="fas fa-utensils"></i>
-                    Кормить
-                </button>
-                <button class="action-btn">
-                    <i class="fas fa-coins"></i>
-                    Майнить
-                </button>
-            </div>
-        </div>
-
-          <!-- Добавляем контейнер для уведомлений -->
-    <div id="notifications"></div>
-
-    <!-- Добавляем аудио элементы -->
-    <audio id="coinSound" src="data:audio/wav;base64,UklGRl9vAAAKAAAAIAAAACAAAABkYXRhAAAAAA=="></audio>
-    <audio id="levelUpSound" src="data:audio/wav;base64,UklGRl9vAAAKAAAAIAAAACAAAABkYXRhAAAAAA=="></audio>
-    <audio id="warningSound" src="data:audio/wav;base64,UklGRl9vAAAKAAAAIAAAACAAAABkYXRhAAAAAA=="></audio>
-
-        <!-- Нижняя навигация -->
-        <nav class="bottom-nav">
-            <a href="#" class="nav-item active">
-                <i class="fas fa-home"></i>
-                Главная
-            </a>
-            <a href="#" class="nav-item">
-                <i class="fas fa-store"></i>
-                Магазин
-            </a>
-            <a href="#" class="nav-item">
-                <i class="fas fa-chart-line"></i>
-                Статы
-            </a>
-            <a href="#" class="nav-item">
-                <i class="fas fa-cog"></i>
-                Настройки
-            </a>
-        </nav>
+    <h1>Моя галерея артефактов</h1>
+    <div class="gallery" id="gallery">
+        <!-- Изображения будут добавлены сюда -->
     </div>
 
-    <script src="/script.js"></script>
+    <script>
+        // Загрузка изображений из API
+        async function loadGallery() {
+            const response = await fetch('/api/gallery');
+            const images = await response.json();
+            const gallery = document.getElementById('gallery');
+
+            images.forEach(image => {
+                const img = document.createElement('img');
+                img.src = image.url;
+                gallery.appendChild(img);
+            });
+        }
+
+        // Загрузить галерею при открытии страницы
+        loadGallery();
+    </script>
 </body>
 </html>
